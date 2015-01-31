@@ -105,10 +105,16 @@ bookHash=Hash[
   "softid"=>"12345"
   ]
 
+Isbn=bookHash["Isbn"].to_s
+Author=bookHash["Author"].to_s
+Published_date=bookHash["Published_date"].to_s
+Publisher=bookHash["Publisher"].to_s
+
 softname=bookHash["Bookname"].to_s
 description=bookHash["description"].to_s
 img_src=bookHash["img_src"].to_s
    sid=bookHash["softid"].to_s
+   book_price=bookHash["book_price"].to_s
    
    
   softid=sid.to_s
@@ -127,7 +133,7 @@ img_src=bookHash["img_src"].to_s
 
 
     descHtml=description
-    descText=description
+    descText=""
 
     sql1="INSERT INTO `description` ( `myID` , `html` , `txt` ) "
     sql1=sql1+"VALUES ("
@@ -145,7 +151,7 @@ img_src=bookHash["img_src"].to_s
     fileCount="0"
 
     sql0="INSERT INTO `main` \
-    ( `myID` , `site` , `category` , `softuid` , `softname` , `register` , `sizevalue` , `sizeunion` , `filecount` , `adddaytime` ) "
+    ( `myID` , `site` , `category` , `softuid` , `softname` , `register` , `sizevalue` , `sizeunion` , `filecount` , `adddaytime`,`price` ) "
     sql0=sql0+"VALUES ("
     sql0=sql0 + \
     newMyID +",'"  \
@@ -157,7 +163,8 @@ img_src=bookHash["img_src"].to_s
     + Misc.txt2Sql("0")+"','"   \
     + Misc.txt2Sql("Byte")+"','"  \
     + Misc.txt2Sql("0")+"','"   \
-    + Misc.datenow()+"'" \
+    + Misc.datenow()+"','"   \
+    + Misc.txt2Sql(book_price)+"'" \
     +"); "
 
     Misc.dbprocess(sql0)
