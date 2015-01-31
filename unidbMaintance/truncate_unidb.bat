@@ -1,0 +1,1 @@
+mysql -uroot -pfav8ht39 unidb < C:\ruby_project\truncate_unidb.sql
