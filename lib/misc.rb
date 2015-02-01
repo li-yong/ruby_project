@@ -1,6 +1,6 @@
 # encoding: UTF-8
-
-$KCODE = "U"
+# encoding: utf-8
+#Encoding.default_internal
 
 module Misc
   require 'rubygems'

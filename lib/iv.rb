@@ -1,12 +1,18 @@
-# -*- coding: utf-8 -*-
+# encoding: utf-8
 module Iv
   require 'misc'
   require 'sanitize'
   require "commondb"
   
   
+  def Iv.removeDBCS_3(s)
+     s=s.gsub(/[^a-zA-Z,.:"'\[\]\/&-_{}()%#!+$\/~` ]/,"")
+     
+  end
+  
   def Iv.removeDBCS_2(s)
-    s=s.encode('utf-8').sub(/\p{Han}+/u, '')
+    s=s.encode('utf-8').gsub(/\p{Han}+/u, '')
+    s=self.removeDBCS_3(s)
   end
   
   def Iv.removeDBCS(s)
@@ -28,6 +34,8 @@ module Iv
    s= s.gsub(slashmark,"\n")
  
   end #def Iv.removeDBCS(s)
+  
+
   
   def Iv.hasDBCS(s)
     if s.nil? 

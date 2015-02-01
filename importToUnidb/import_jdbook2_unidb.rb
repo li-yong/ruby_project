@@ -1,3 +1,4 @@
+# encoding: utf-8
 $LOAD_PATH << File.dirname(__FILE__).to_s+"/lib"
 $LOAD_PATH << "c:/ruby_project/lib"
 
@@ -15,6 +16,33 @@ def parse_a_book(url,id,overwrite)
   b.goto(url)
 
   puts "\n====in url "+url
+  
+  if not b.div(:class,"breadcrumb").exist?
+    puts "not a valid product"
+    return
+  end
+  
+  #if not b.div(:class,"breadcrumb").html.include?("channel.jd.com/1713-4855")
+  #  puts "not a english book"
+  #  b.close
+  #  return
+  # end
+  
+  if not b.div(:class,"breadcrumb").html.include?("1713-4855-4876") # Professional & Technical
+    puts "not a  Professional & Technical book"
+    b.close
+    return
+  end
+  
+    
+  
+  
+  
+    if not b.div(:class,"breadcrumb").html.include?("1713-4855-4877") #reference
+    puts "not a english book"
+    b.close
+    return
+  end
 
   if not b.body(:id,"book").exist?
     puts "body not exist"
@@ -35,21 +63,31 @@ def parse_a_book(url,id,overwrite)
   end
 
   softname=b.div(:id, "name").text
+  softname=Iv.removeDBCS_2(softname)
   puts "Bookname:"+softname
 
   s=b.ul(:id,"summary")
+  
+  author=""
+  published_date=""
+  publisher=""
+isbn=""
+description=""
+img_src=""
 
   author=s.li(:class, "fore1").div(:class,"dd bfc").text
-  puts "Author:"+author
+  author=Iv.removeDBCS_2(author)
+  puts "author:"+author
 
-  puts published_date=s.li(:class, "fore2").div(:class,"dd bfc").text
-  puts "Published_date:"+published_date
+  published_date=s.li(:class, "fore2").div(:class,"dd bfc").text
+  puts "published_date:"+published_date
 
   publisher= s.li(:class, "fore3").div(:class,"dd bfc").text
-  puts "Publisher:"+publisher
+  publisher=Iv.removeDBCS_2(publisher)
+  puts "publisher:"+publisher
 
   isbn= s.li(:class, "fore4").div(:class,"dd bfc").text
-  puts "Isbn:"+isbn
+  puts "isbn:"+isbn
 
   book_price= s.li(:class, "fore5").div(:class,"dd bfc").text
   book_price=~/(\d+)/
@@ -77,13 +115,13 @@ def parse_a_book(url,id,overwrite)
   b.close
 
   h=Hash[
-  "Isbn"=>isbn,
-  "Book_price"=>book_price,
+  "isbn"=>isbn,
+  "book_price"=>book_price,
   "description"=>description,
   "img_src"=>img_src,
-  "Author"=>author,
-  "Published_date"=>published_date,
-  "Publisher"=>publisher,
+  "author"=>author,
+  "published_date"=>published_date,
+  "publisher"=>publisher,
   "Bookname"=>softname,
   "softid"=>id.to_s
   ]
@@ -93,22 +131,22 @@ def parse_a_book(url,id,overwrite)
 end # parse_a_book(url,id,overwrite)
 
 def SaveId(bookHash=nil)
-bookHash=Hash[
-  "Isbn"=>"isbn",
-  "Book_price"=>"123",
-  "description"=>"description",
-  "img_src"=>"https://www.google.com/images/srpr/logo11w.png",
-  "Author"=>"author",
-  "Published_date"=>"published_date",
-  "Publisher"=>"publisher",
-  "Bookname"=>"softname",
-  "softid"=>"12345"
-  ]
+#bookHash=Hash[
+#  "isbn"=>"isbn",
+#  "Book_price"=>"123",
+#  "description"=>"description",
+#  "img_src"=>"https://www.google.com/images/srpr/logo11w.png",
+#  "author"=>"author",
+#  "published_date"=>"published_date",
+#  "publisher"=>"publisher",
+#  "Bookname"=>"softname",
+#  "softid"=>"12345"
+#  ]
 
-Isbn=bookHash["Isbn"].to_s
-Author=bookHash["Author"].to_s
-Published_date=bookHash["Published_date"].to_s
-Publisher=bookHash["Publisher"].to_s
+isbn=bookHash["isbn"].to_s
+author=bookHash["author"].to_s
+published_date=bookHash["published_date"].to_s
+publisher=bookHash["publisher"].to_s
 
 softname=bookHash["Bookname"].to_s
 description=bookHash["description"].to_s
@@ -132,8 +170,16 @@ img_src=bookHash["img_src"].to_s
   if Misc.hasSoftName(softname.to_s).to_s=="0"  #9iv does not apply Misc.hasID(softid.to_s).to_s=="0"
 
 
-    descHtml=description
+
     descText=""
+
+descText=  "ISBN: "+isbn+"\r\n"
+descText=descText +  author+"\r\n"
+descText=descText  +  publisher+"    "
+descText=descText  +  published_date +"\r\n" 
+descText=descText +  description+"\r\n"
+ 
+  descHtml=descText
 
     sql1="INSERT INTO `description` ( `myID` , `html` , `txt` ) "
     sql1=sql1+"VALUES ("
@@ -191,14 +237,41 @@ img_src=bookHash["img_src"].to_s
 end
 
 
-SaveId();
+#SaveId();
 
-num=(19163003..19165000)
+
+
+
+  def hasJdId(id)
+ 
+    sql="SELECT count( * ) \
+FROM `main` \
+WHERE `softuid` ='"
+    sql=sql+id.to_s
+    sql=sql+"';"
+    #puts sql
+    s=Misc.dbshow(sql)
+    puts s
+ return s 
+  end  #def hasJdId(id)
+
+#num=(19163003..19165000)
+num=(19000003..19165000)
+
+
 
 num.each do |i|
-  url= "http://spu.jd.com/"+i.to_s+".html"
+#http://spu.jd.com/19000003.html
 
-  parse_a_book(url,i,nil)
+ if (hasJdId(i).to_i >0)
+   s="the ID "+ i.to_s + " has been processed"
+   puts s
+   next
+ end
+ 
+ url= "http://spu.jd.com/"+i.to_s+".html"
+
+ parse_a_book(url,i,nil)
 
 end
 
