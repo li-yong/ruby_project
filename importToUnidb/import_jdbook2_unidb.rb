@@ -7,12 +7,35 @@ require 'misc'
 require 'DBI'
 require "watir"
 
-#require "watir-classic"
+#require "watir-webdriver"
 
-def parse_a_book(url,id,overwrite)
 
-  b=Watir::Browser.new
+  def hasJdId(id)
+ 
+    sql="SELECT count( * ) \
+FROM `main` \
+WHERE `softuid` ='"
+    sql=sql+id.to_s
+    sql=sql+"';"
+    #puts sql
+    s=Misc.dbshow(sql)
+    puts s
+ return s 
+  end  #def hasJdId(id)
 
+
+def parse_a_book(id)
+
+ if (hasJdId(id).to_i >0)
+   s="the ID "+ id.to_s + " has been processed"
+   puts s
+   return
+ end
+
+
+  b=Watir::Browser.new 
+  #b=Watir::Browser.new :firefox
+ url= "http://spu.jd.com/"+id.to_s+".html"
   b.goto(url)
 
   puts "\n====in url "+url
@@ -22,11 +45,11 @@ def parse_a_book(url,id,overwrite)
     return
   end
   
-  #if not b.div(:class,"breadcrumb").html.include?("channel.jd.com/1713-4855")
-  #  puts "not a english book"
-  #  b.close
-  #  return
-  # end
+  if not b.div(:class,"breadcrumb").html.include?("channel.jd.com/1713-4855")
+    puts "not a english book"
+    b.close
+    return
+   end
   
   if not b.div(:class,"breadcrumb").html.include?("1713-4855-4876") # Professional & Technical
     puts "not a  Professional & Technical book"
@@ -38,11 +61,11 @@ def parse_a_book(url,id,overwrite)
   
   
   
-    if not b.div(:class,"breadcrumb").html.include?("1713-4855-4877") #reference
-    puts "not a english book"
-    b.close
-    return
-  end
+ #  if not b.div(:class,"breadcrumb").html.include?("1713-4855-4877") #reference
+ #  puts "not a english book"
+ #  b.close
+ #  return
+ #  end
 
   if not b.body(:id,"book").exist?
     puts "body not exist"
@@ -75,24 +98,52 @@ isbn=""
 description=""
 img_src=""
 
+if s.li(:class, "fore1").div(:class,"dd bfc").exist?
   author=s.li(:class, "fore1").div(:class,"dd bfc").text
   author=Iv.removeDBCS_2(author)
   puts "author:"+author
+  else
+  puts "no author"; b.close; return
+end
 
+if s.li(:class, "fore2").div(:class,"dd bfc").exist?
   published_date=s.li(:class, "fore2").div(:class,"dd bfc").text
   puts "published_date:"+published_date
+   else
+   puts "no published_date";  b.close;;
+   return
+  
+end 
 
+if s.li(:class, "fore3").div(:class,"dd bfc").exist?
   publisher= s.li(:class, "fore3").div(:class,"dd bfc").text
   publisher=Iv.removeDBCS_2(publisher)
   puts "publisher:"+publisher
+   else
+   puts "no publisher";
+    b.close;
+   return  
+end
 
+if s.li(:class, "fore4").div(:class,"dd bfc").exist?
   isbn= s.li(:class, "fore4").div(:class,"dd bfc").text
   puts "isbn:"+isbn
+     else
+   puts "no isbn";
+    b.close;
+   return
+end
 
+if  s.li(:class, "fore5").div(:class,"dd bfc").exist?
   book_price= s.li(:class, "fore5").div(:class,"dd bfc").text
   book_price=~/(\d+)/
   book_price= ($1.to_i/4.5).to_i.to_s  #HUILV 1USD=4.5CNY
   puts "Book_price:"+book_price
+     else
+   puts "no price";
+    b.close;
+   return
+end
 
   if book_price == ''
     puts "empty book_price, means no seller selling the book"
@@ -242,21 +293,59 @@ end
 
 
 
-  def hasJdId(id)
- 
-    sql="SELECT count( * ) \
-FROM `main` \
-WHERE `softuid` ='"
-    sql=sql+id.to_s
-    sql=sql+"';"
-    #puts sql
-    s=Misc.dbshow(sql)
-    puts s
- return s 
-  end  #def hasJdId(id)
+
+
+
+def parse_a_page(url)
+  b=Watir::Browser.new 
+  #b=Watir::Browser.new :firefox
+
+  b.goto(url)
+  
+   if not b.div(:id,"plist").exist?
+    puts "no products in page"
+    return
+  end
+  
+  pl=b.div(:id,"plist")
+  
+  d=pl.divs(:class, "item")
+  
+  d.each do |x|
+   x.html=~/sku="([0-9]+)"/;
+  sku=$1;
+  parse_a_book(sku)
+  end
+
+  
+b.close
+
+end
+
+#professional  only
+
+page=(169..2000)
+page.each do |i|
+  uri="http://list.jd.com/1713-4855-4876.html?s=15&t=1&p="+i.to_s+"&JL=6_0_0";
+  puts "in page id "+i.to_s
+  parse_a_page(uri)
+end
+exit
+
+
+
+
+
+
+
+
 
 #num=(19163003..19165000)
-num=(19000003..19165000)
+num=(19000101..19165000)
+
+
+
+
 
 
 
@@ -269,9 +358,9 @@ num.each do |i|
    next
  end
  
- url= "http://spu.jd.com/"+i.to_s+".html"
 
- parse_a_book(url,i,nil)
+
+ parse_a_book(i)
 
 end
 
