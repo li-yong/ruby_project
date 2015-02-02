@@ -9,7 +9,7 @@ require "watir"
 
 #require "watir-webdriver"
 
-
+ $HIDE_IE = true
   def hasJdId(id)
  
     sql="SELECT count( * ) \
@@ -24,7 +24,7 @@ WHERE `softuid` ='"
   end  #def hasJdId(id)
 
 
-def parse_a_book(id)
+def parse_a_book(id,pageid)
 
  if (hasJdId(id).to_i >0)
    s="the ID "+ id.to_s + " has been processed"
@@ -39,6 +39,7 @@ def parse_a_book(id)
   b.goto(url)
 
   puts "\n====in url "+url
+  puts "in page "+pageid.to_s
   
   if not b.div(:class,"breadcrumb").exist?
     puts "not a valid product"
@@ -47,13 +48,13 @@ def parse_a_book(id)
   
   if not b.div(:class,"breadcrumb").html.include?("channel.jd.com/1713-4855")
     puts "not a english book"
-    b.close
+    `taskkill /F  /IM   iexplore.exe /T`
     return
    end
   
   if not b.div(:class,"breadcrumb").html.include?("1713-4855-4876") # Professional & Technical
     puts "not a  Professional & Technical book"
-    b.close
+    `taskkill /F  /IM   iexplore.exe /T`
     return
   end
   
@@ -63,25 +64,25 @@ def parse_a_book(id)
   
  #  if not b.div(:class,"breadcrumb").html.include?("1713-4855-4877") #reference
  #  puts "not a english book"
- #  b.close
+ #  `taskkill /F  /IM   iexplore.exe /T`
  #  return
  #  end
 
   if not b.body(:id,"book").exist?
     puts "body not exist"
-    b.close
+    `taskkill /F  /IM   iexplore.exe /T`
     return
   end
 
   if not b.div(:id,"introduction").exist?
     puts "introduction not exist"
-    b.close
+    `taskkill /F  /IM   iexplore.exe /T`
     return
   end
 
   if not b.div(:id,"name").exist?
     puts "name not exist"
-    b.close
+    `taskkill /F  /IM   iexplore.exe /T`
     return
   end
 
@@ -103,14 +104,14 @@ if s.li(:class, "fore1").div(:class,"dd bfc").exist?
   author=Iv.removeDBCS_2(author)
   puts "author:"+author
   else
-  puts "no author"; b.close; return
+  puts "no author"; `taskkill /F  /IM   iexplore.exe /T`; return
 end
 
 if s.li(:class, "fore2").div(:class,"dd bfc").exist?
   published_date=s.li(:class, "fore2").div(:class,"dd bfc").text
   puts "published_date:"+published_date
    else
-   puts "no published_date";  b.close;;
+   puts "no published_date";  `taskkill /F  /IM   iexplore.exe /T`;;
    return
   
 end 
@@ -121,7 +122,7 @@ if s.li(:class, "fore3").div(:class,"dd bfc").exist?
   puts "publisher:"+publisher
    else
    puts "no publisher";
-    b.close;
+    `taskkill /F  /IM   iexplore.exe /T`;
    return  
 end
 
@@ -130,7 +131,7 @@ if s.li(:class, "fore4").div(:class,"dd bfc").exist?
   puts "isbn:"+isbn
      else
    puts "no isbn";
-    b.close;
+    `taskkill /F  /IM   iexplore.exe /T`;
    return
 end
 
@@ -141,13 +142,13 @@ if  s.li(:class, "fore5").div(:class,"dd bfc").exist?
   puts "Book_price:"+book_price
      else
    puts "no price";
-    b.close;
+    `taskkill /F  /IM   iexplore.exe /T`;
    return
 end
 
   if book_price == ''
     puts "empty book_price, means no seller selling the book"
-    b.close
+    `taskkill /F  /IM   iexplore.exe /T`
     return
   end
 
@@ -163,7 +164,7 @@ end
   #  open('image'+id.to_s+'.png', 'wb') do |file|
   #    file << open(img_src).read
   #  end
-  b.close
+  `taskkill /F  /IM   iexplore.exe /T`
 
   h=Hash[
   "isbn"=>isbn,
@@ -296,7 +297,7 @@ end
 
 
 
-def parse_a_page(url)
+def parse_a_page(url,pageid)
   b=Watir::Browser.new 
   #b=Watir::Browser.new :firefox
 
@@ -310,25 +311,34 @@ def parse_a_page(url)
   pl=b.div(:id,"plist")
   
   d=pl.divs(:class, "item")
+
+  skus=Array.new()
   
+ 
   d.each do |x|
    x.html=~/sku="([0-9]+)"/;
   sku=$1;
-  parse_a_book(sku)
+  skus.push(sku)  
   end
-
   
-b.close
+# `taskkill /F  /IM   iexplore.exe /T`
+ `taskkill /F  /IM   iexplore.exe /T`
+
+  skus.each do |sku|
+    parse_a_book(sku,pageid)
+  end
+  
+
 
 end
 
 #professional  only
 
-page=(169..2000)
+page=(300..2000)
 page.each do |i|
   uri="http://list.jd.com/1713-4855-4876.html?s=15&t=1&p="+i.to_s+"&JL=6_0_0";
   puts "in page id "+i.to_s
-  parse_a_page(uri)
+  parse_a_page(uri,i)
 end
 exit
 
@@ -337,30 +347,4 @@ exit
 
 
 
-
-
-
-#num=(19163003..19165000)
-num=(19000101..19165000)
-
-
-
-
-
-
-
-num.each do |i|
-#http://spu.jd.com/19000003.html
-
- if (hasJdId(i).to_i >0)
-   s="the ID "+ i.to_s + " has been processed"
-   puts s
-   next
- end
  
-
-
- parse_a_book(i)
-
-end
-
