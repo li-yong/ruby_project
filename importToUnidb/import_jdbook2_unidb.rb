@@ -334,7 +334,7 @@ end
 
 #professional  only
 
-page=(300..2000)
+page=(1950..2000)
 page.each do |i|
   uri="http://list.jd.com/1713-4855-4876.html?s=15&t=1&p="+i.to_s+"&JL=6_0_0";
   puts "in page id "+i.to_s

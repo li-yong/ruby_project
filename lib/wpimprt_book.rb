@@ -1,25 +1,19 @@
 
 
-module Wpimprt
+module Wpimprt_book
 require "misc"
 require "iv"
 require "cmm"
 require "cmm2"
 
- 
- 
-
- 
+  
 
 
 
 
-
-
-
-def Wpimprt.dbprocess(sql)
+def Wpimprt_book.dbprocess(sql)
   #sql=self.txt2Sql(sql.to_s)
-  dbh = DBI.connect('DBI:ODBC:wp29','root','')
+  dbh = DBI.connect('DBI:ODBC:wp','root','')
   #dbh = DBI.connect('DBI:ODBC:unidb','ryanTest2','AppleQ3Aj8X4dE')
   #puts sql
   
@@ -39,11 +33,11 @@ end
 
 
 #back a array with selectsql result
-def Wpimprt.dbshow(selectsql)
+def Wpimprt_book.dbshow(selectsql)
   #selectsql=self.txt2Sql(selectsql.to_s)  
   resultarr=[]
   #puts selectsql
-  dbh = DBI.connect('DBI:ODBC:wp29','root','fav8ht39')
+  dbh = DBI.connect('DBI:ODBC:wp','root','')
   #dbh = DBI.connect('DBI:ODBC:unidb','ryanTest2','AppleQ3Aj8X4dE')
   sth = dbh.prepare(selectsql)
   puts  selectsql
@@ -74,7 +68,7 @@ end #def Osc.dbshow(selectsql)
 
 
 #return 0 if no id find
-def Wpimprt.hasId(id)
+def Wpimprt_book.hasId(id)
   id=Misc.txt2Sql(id.to_s) 
   sql="SELECT count( * ) \
       FROM `wp_posts` \
@@ -86,7 +80,7 @@ def Wpimprt.hasId(id)
 end#def Osc.hasId(id)
 
 
-def Wpimprt.hasmyID(myid)
+def Wpimprt_book.hasmyID(myid)
   id=Misc.txt2Sql(id.to_s) 
   sql="SELECT count( * ) \
       FROM `myid_postid` \
@@ -100,7 +94,7 @@ end#def Osc.hasmyID(id)
 
 
 #return 0 if no softname find
-def Wpimprt.hasPostname(postname)
+def Wpimprt_book.hasPostname(postname)
   sql="SELECT count( * ) \
       FROM `wp_posts` \
       WHERE `post_title` ="
@@ -119,13 +113,13 @@ end#Osc.hasSoftname(softname)
   
 
 
-def Wpimprt.getMaxPstID()
+def Wpimprt_book.getMaxPstID()
   sql="SELECT MAX(ID) FROM `wp_posts` WHERE 1"
   a=self.dbshow(sql)  
 end #def Osc.getMaxPstID()
 
-def Wpimprt.getcatcount(catid)
-  sql="SELECT `count` FROM `wp_term_taxonomy` WHERE `term_taxonomy_id`=\""+catid+"\""
+def Wpimprt_book.getcatcount(catid)
+  sql="SELECT `count` FROM `wp_term_taxonomy` WHERE `term_taxonomy_id`=\""+catid.to_s+"\""
   a=self.dbshow(sql)  
 end #def Osc.getMaxPstID()
 
@@ -134,7 +128,7 @@ end #def Osc.getMaxPstID()
  
  
 
-def Wpimprt.arepaypalHtmlCode(myid)
+def Wpimprt_book.arepaypalHtmlCode(myid)
   
   dllink=Osc.getdllink(myid)  
   dllink="" if dllink.nil?
@@ -157,7 +151,9 @@ end
 
 
 
-def Wpimprt.assembleFullHDescHtml(myid)
+def Wpimprt_book.assembleFullHDescHtml(myid)
+ 
+
 puts "\n============"
 puts "myid is: "+myid.to_s
 regday=Osc.getregday(myid).to_s
@@ -215,22 +211,184 @@ fullhtml= fullhtml + "</table>\n\n"
 end #def Osc.assembleFullHDescHtml(myid)
 
 
+def Wpimprt_book.insertinsertwp_postmeta(myid, meta_id,postid,meta_key,meta_value)
+  
+sql_ip="INSERT INTO `wp_postmeta` ( `meta_id` , `post_id` , `meta_key` , `meta_value` ) \
+VALUES (" 
+sql_ip=sql_ip +    "'" + meta_id + "',"  
+sql_ip=sql_ip +    "'" + postid + "',"  
+sql_ip=sql_ip +    "'" + meta_key + "',"  
+sql_ip=sql_ip +    "'" + meta_value + "'"   
+
+sql_ip= sql_ip + ")"
+
+#puts sql_ip
+
+
+ self.dbprocess(sql_ip)  
+ puts "inserted to wp_postmeta, myid: #{myid},meta_key:#{meta_key})"
+  
+  
+end #insertinsertwp_postmeta
 
 
 
- 
+def Wpimprt_book.insertinsertwp_postmeta_image(myid,postid)
+imageLocalpath=Osc.getimgLclPth_book(myid)
 
-def Wpimprt.insertwp_posts(myid,postid)
- 
+meta_id=""
+post_id=postid
+meta_key="_wp_attached_file"
+meta_value=imageLocalpath
+
+self.insertinsertwp_postmeta(myid, meta_id,postid,meta_key,meta_value)
+#puts "inserted to wp_postmeta, myid: #{myid},postid:#{postid})"
+
+
+end
+
+
+
+def Wpimprt_book.insert_wp_metas(myid, thumbnail_id,postid) 
+bootname=Osc.getproducts_name(myid)
+regular_price= Osc.getproducts_price(myid)
+purchase_note=""
+meta_id=""
+
+self.insertinsertwp_postmeta(myid, meta_id,postid,"_wp_attachment_image_alt",bootname)
+self.insertinsertwp_postmeta(myid, meta_id,postid,"_thumbnail_id", thumbnail_id)
+self.insertinsertwp_postmeta(myid, meta_id,postid,"_visibility","visible")
+self.insertinsertwp_postmeta(myid, meta_id,postid,"_stock_status","instock")
+self.insertinsertwp_postmeta(myid, meta_id,postid,"total_sales","0")
+self.insertinsertwp_postmeta(myid, meta_id,postid,"_downloadable","no")
+self.insertinsertwp_postmeta(myid, meta_id,postid,"_virtual","no")
+self.insertinsertwp_postmeta(myid, meta_id,postid,"_regular_price",regular_price)
+self.insertinsertwp_postmeta(myid, meta_id,postid,"_sale_price","")
+self.insertinsertwp_postmeta(myid, meta_id,postid,"_purchase_note",purchase_note)
+self.insertinsertwp_postmeta(myid, meta_id,postid,"_featured","no")
+self.insertinsertwp_postmeta(myid, meta_id,postid,"_weight","")
+self.insertinsertwp_postmeta(myid, meta_id,postid,"_length","")
+self.insertinsertwp_postmeta(myid, meta_id,postid,"_width","")
+self.insertinsertwp_postmeta(myid, meta_id,postid,"_height","")
+self.insertinsertwp_postmeta(myid, meta_id,postid,"_sku","")
+self.insertinsertwp_postmeta(myid, meta_id,postid,"_product_attributes","a:0:{}")
+self.insertinsertwp_postmeta(myid, meta_id,postid,"_sale_price_dates_from","")
+self.insertinsertwp_postmeta(myid, meta_id,postid,"_sale_price_dates_to","")
+self.insertinsertwp_postmeta(myid, meta_id,postid,"_price",regular_price)
+self.insertinsertwp_postmeta(myid, meta_id,postid,"_sold_individually","")
+self.insertinsertwp_postmeta(myid, meta_id,postid,"_manage_stock","no")
+self.insertinsertwp_postmeta(myid, meta_id,postid,"_backorders","no")
+self.insertinsertwp_postmeta(myid, meta_id,postid,"_stock","")
+self.insertinsertwp_postmeta(myid, meta_id,postid,"_product_image_gallery","")
+self.insertinsertwp_postmeta(myid, meta_id,postid,"","")
+end
+
+
+def Wpimprt_book.insertinsertwp_posts_image(myid)
+postid=(self.getMaxPstID.to_i+1).to_s
+  
+book_name=Osc.getproducts_name(myid)
+imagepath=Osc.gettitleimg_book(myid)
+
+book_name=Misc.txt2Sql(book_name)
+imagepath=Misc.txt2Sql(imagepath) 
+if imagepath.include? ".png"
+  imgType="png"
+end
+
+if imagepath.include? ".jpg"
+  imgType="jpeg"
+end
+
+if imagepath.include? ".jpeg"
+  imgType="jpeg"
+end
+
+
+
 datenow=Misc.datenow()
 
 
 
- 
-post_author="2" #John,role is author
+
+
+post_author=""
 post_date=datenow
 post_date_gmt=datenow
-post_content=Misc.txt2Sql(self.assembleFullHDescHtml(myid))
+post_content=book_name
+post_title=book_name
+post_excerpt=book_name
+post_status="inherit"
+comment_status="open"
+ping_status="open"
+post_password=""
+post_name=book_name
+to_ping=""
+pinged=""
+post_modified=datenow
+post_modified_gmt=datenow
+post_content_filtered=""
+post_parent=""
+guid=imagepath
+menu_order=""
+post_type="attachment"
+post_mime_type="image/"+imgType #image/jpeg for jpg file
+comment_count="0"
+
+sql_img="INSERT INTO `wp_posts` ( `ID` , `post_author` , `post_date` , `post_date_gmt` , \
+`post_content` , `post_title` , `post_excerpt` , `post_status` , \
+`comment_status` , `ping_status` , `post_password` , `post_name` ,\
+`to_ping` , `pinged` , `post_modified` , `post_modified_gmt` , \
+`post_content_filtered` , `post_parent` , `guid` , `menu_order` , \
+`post_type` , `post_mime_type` , `comment_count` ) \
+VALUES (" 
+sql_img=sql_img +    "'" + postid + "',"  
+sql_img=sql_img +    "'" + post_author + "',"  
+sql_img=sql_img +    "'" + post_date + "',"  
+sql_img=sql_img +    "'" + post_date_gmt+ "',"  
+sql_img=sql_img +    "'" + post_content + "',"  
+sql_img=sql_img +    "'" + post_title + "',"  
+sql_img=sql_img +    "'" + post_excerpt + "',"  
+sql_img=sql_img +    "'" + post_status+ "',"  
+sql_img=sql_img +    "'" + comment_status + "',"  
+sql_img=sql_img +    "'" + ping_status + "',"  
+sql_img=sql_img +    "'" + post_password + "',"  
+sql_img=sql_img +    "'" + post_name + "',"  
+sql_img=sql_img +    "'" + to_ping + "',"  
+sql_img=sql_img +    "'" + pinged + "',"  
+sql_img=sql_img +    "'" + post_modified + "',"  
+sql_img=sql_img +    "'" + post_modified_gmt + "',"  
+sql_img=sql_img +    "'" + post_content_filtered + "',"  
+sql_img=sql_img +    "'" + post_parent + "',"  
+sql_img=sql_img +    "'" + guid + "',"  
+sql_img=sql_img +    "'" + menu_order + "',"  
+sql_img=sql_img +    "'" + post_type + "',"  
+sql_img=sql_img +    "'" + post_mime_type + "',"  
+sql_img=sql_img +    "'" + comment_count + "'"   
+
+sql_img= sql_img + ")"
+
+#puts sql_img
+
+
+ self.dbprocess(sql_img)  
+ puts "inserted image to wp_posts, postid:#{postid})"
+ return postid
+end #Wpimprt_book.insertinsertwp_posts_image(myid,postid)
+
+
+
+
+def Wpimprt_book.insertwp_posts(myid,postid)
+ 
+datenow=Misc.datenow()
+ 
+ 
+post_author="1" #John,role is author
+post_date=datenow
+post_date_gmt=datenow
+post_content=Osc.getDeschtml(myid)
+#post_content=Misc.txt2Sql(self.assembleFullHDescHtml(myid))
 post_title=Misc.txt2Sql(Osc.getproducts_name(myid))
 post_excerpt=""
 post_status="publish"
@@ -246,7 +404,7 @@ post_content_filtered=""
 post_parent="0"
 guid=""
 menu_order="0"
-post_type="post"
+post_type="product"
 post_mime_type=""
 comment_count="0"
 
@@ -294,7 +452,7 @@ end #def Osc.insertProducts_description()
 
  
  
-def Wpimprt.insertmyid_postid(myid,postid)
+def Wpimprt_book.insertmyid_postid(myid,postid)
   sql3="INSERT INTO `myid_postid` (`myID`, `postid`) VALUES ("
   sql3=sql3+ "'" + myid.to_s+ "'" +", "
   sql3=sql3+ "'" + postid.to_s+ "'" 
@@ -308,9 +466,10 @@ end
   
 
 
-def Wpimprt.insertwp_term_taxonomy(myid,postid)
+def Wpimprt_book.insertwp_term_taxonomy(myid,postid)
    softname=Osc.getproducts_name(myid)
    catid=Cmm2.publicgetcatID(softname)
+   catid=2 #simple product for wpecommence
    term_order="0"
    
    sql4="INSERT INTO `wp_term_relationships` ( `object_id` , `term_taxonomy_id` , `term_order` ) VALUES ("
@@ -328,12 +487,12 @@ def Wpimprt.insertwp_term_taxonomy(myid,postid)
     sql5=sql5+"'"+catid.to_s+"'"
    self.dbprocess(sql5)
    puts "update term_taxonomy, add 1 for products # under this category"
-end #def Wpimprt.insertwp_term_taxonomy(myid,postid)
+end #def Wpimprt_book.insertwp_term_taxonomy(myid,postid)
 
 
 
 
-def Wpimprt.insertwp_are_paypal_items(myid, postid)
+def Wpimprt_book.insertwp_are_paypal_items(myid, postid)
 
 products_price=Osc.calcprice(Osc.getsizeInBytes(myid))
 products_price=products_price.to_i * 0.3 
@@ -363,26 +522,27 @@ products_price=products_price * 2
   puts "inserted to  wp_are_paypal_items,  postid:#{postid}, price:#{amount} usd)"
 
 
-end #def def Wpimprt.insertwp_term_taxonomy(myid,postid)
+end #def def Wpimprt_book.insertwp_term_taxonomy(myid,postid)
 
-def Wpimprt.insertMyID(myid)
+def Wpimprt_book.insertMyID(myid)
   myid=myid.to_s
-  postid=(self.getMaxPstID.to_i+1).to_s
   postname=Osc.getproducts_name(myid)
+
   
- 
- 
-
-
 
 judge= self.hasPostname(postname).to_s == "0".to_s  
-judge = judge and self.hasId(postid).to_s == "0".to_s
+#judge = judge and self.hasId(postid).to_s == "0".to_s
 judge = judge and self.hasmyID(myid).to_s == "0".to_s  
 #puts judge
-if judge 
+if judge
+  imgpostid=self.insertinsertwp_posts_image(myid)  
+  self.insertinsertwp_postmeta_image(myid,imgpostid)
+  
+  postid=(self.getMaxPstID.to_i+1).to_s
   self.insertwp_posts(myid,postid);  
   self.insertwp_term_taxonomy(myid,postid)
-  self.insertwp_are_paypal_items(myid,postid)
+  #self.insertwp_are_paypal_items(myid,postid)
+  self.insert_wp_metas(myid,imgpostid,postid) 
   self.insertmyid_postid(myid,postid)
 else #if judge
   puts "wp_post->post_name,wp_post->id, or myid_postid->myid might have duplicate record."
@@ -391,15 +551,15 @@ end #def osc.insertMyID(myid)
 
 
 
-            def Wpimprt.getPostidFromMyID(odbc,myid)
+            def Wpimprt_book.getPostidFromMyID(odbc,myid)
               myid=myid.to_s
               sql="select `postid` from `myid_postid` where `myID`="
               sql=sql+myid
               Misc.dbshowCommon(odbc,sql)
-            end #def Wpimprt.getPostidFromMyID(odbc,myid)
+            end #def Wpimprt_book.getPostidFromMyID(odbc,myid)
             
 
-def Wpimprt.removeByMyID(odbc,myid)
+def Wpimprt_book.removeByMyID(odbc,myid)
   postId=self.getPostidFromMyID(odbc,myid)
   if postId.nil?
     puts "not records in tbl myid_postid for myid=#{myid}"
@@ -415,11 +575,11 @@ def Wpimprt.removeByMyID(odbc,myid)
   
    
   
-end #def Wpimprt.removeByMyID(odbc,postobject_id Id)
+end #def Wpimprt_book.removeByMyID(odbc,postobject_id Id)
 
 
  
-def Wpimprt.removeBrokenLinkPost(startMyID)
+def Wpimprt_book.removeBrokenLinkPost(startMyID)
   startID=0 if startID.nil?
 
   sqlUnidb="select myID from dlpathmap where valid=0 "
@@ -439,7 +599,7 @@ def Wpimprt.removeBrokenLinkPost(startMyID)
 end
 
 #clean `wp_term_relationships` tbl, remove entry that not exist in 'wp_posts'
-def Wpimprt.cleanUpWp_term_relationships(startMyID)
+def Wpimprt_book.cleanUpWp_term_relationships(startMyID)
   startID=0 if startID.nil?
 
   sqlWp29_wp_term_rel="select object_id from wp_term_relationships where object_id>=#{startMyID} "
@@ -462,4 +622,4 @@ end
 
 
 
-end #end of the module Wpimprt
+end #end of the module Wpimprt_book

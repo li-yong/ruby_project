@@ -273,6 +273,38 @@ end #def Osc.gettitleimg(myid)
 
 
 
+#get image from given myid
+def Osc.gettitleimg_book(myid)
+sql="SELECT `imagepath`  FROM `images` where `myID`="
+sql=sql+myid.to_s
+sql=sql+" LIMIT 0 ,1"
+result=Misc.dbshow(sql)
+
+
+if result.length > 0
+  return result 
+else
+  return ""
+end #if !result.nil?
+end #def Osc.gettitleimg_book(myid)
+
+#get local image from given myid
+def Osc.getimgLclPth_book(myid)
+sql="SELECT `imgLclPth`  FROM `images` where `myID`="
+sql=sql+myid.to_s
+sql=sql+" LIMIT 0 ,1"
+result=Misc.dbshow(sql)
+
+
+if result.length > 0
+  return result
+else
+  return ""
+end #if !result.nil?
+end #def Osc.getimgLclPth(myid)
+
+
+
 def Osc.getcatname(myid)
   myid=myid.to_s
   sql="select `category` from `main` where `myID`="
@@ -386,6 +418,10 @@ def Osc.getproducts_name(myid)
  Misc.dbshow(sql) 
 end #def Osc.getproducts_name(myid)
 
+def Osc.getproducts_price(myid)
+ sql= "SELECT `price` FROM `main` WHERE `myID`="+myid.to_s
+ Misc.dbshow(sql) 
+end #def Osc.getproducts_name(myid)
 
 
 def Osc.insertProduct(myID,products_id,products_image,products_sizenum,products_sizeunion)
