@@ -528,10 +528,10 @@ end #def def Wpimprt_book.insertwp_term_taxonomy(myid,postid)
 def Wpimprt_book.imageOK(myid)
   imageLocalpath=Osc.getimgLclPth_book(myid)
   if imageLocalpath.include?"dlerr:"
-    return false
+    return 0
   end
   
-  return true
+  return 1
 end
 
 def Wpimprt_book.insertMyID(myid)
@@ -543,7 +543,14 @@ def Wpimprt_book.insertMyID(myid)
 judge= self.hasPostname(postname).to_s == "0".to_s  
 #judge = judge and self.hasId(postid).to_s == "0".to_s
 judge = judge and self.hasmyID(myid).to_s == "0".to_s
-judge = judge and self.imageOK(myid)
+
+judge = (judge and self.imageOK(myid))
+
+if judge.to_s=="0"
+   judge = false
+end
+
+
 #puts judge
 if judge
   imgpostid=self.insertinsertwp_posts_image(myid)  
