@@ -250,12 +250,12 @@ end
 
 
 def Wpimprt_book.insert_wp_metas(myid, thumbnail_id,postid) 
-bootname=Osc.getproducts_name(myid)
+bookname=Misc.txt2Sql(Osc.getproducts_name(myid))
 regular_price= Osc.getproducts_price(myid)
 purchase_note=""
 meta_id=""
 
-self.insertinsertwp_postmeta(myid, meta_id,postid,"_wp_attachment_image_alt",bootname)
+self.insertinsertwp_postmeta(myid, meta_id,postid,"_wp_attachment_image_alt",bookname)
 self.insertinsertwp_postmeta(myid, meta_id,postid,"_thumbnail_id", thumbnail_id)
 self.insertinsertwp_postmeta(myid, meta_id,postid,"_visibility","visible")
 self.insertinsertwp_postmeta(myid, meta_id,postid,"_stock_status","instock")
@@ -387,10 +387,10 @@ datenow=Misc.datenow()
 post_author="1" #John,role is author
 post_date=datenow
 post_date_gmt=datenow
-post_content=Osc.getDeschtml(myid)
+post_content=""
 #post_content=Misc.txt2Sql(self.assembleFullHDescHtml(myid))
 post_title=Misc.txt2Sql(Osc.getproducts_name(myid))
-post_excerpt=""
+post_excerpt=Osc.getDeschtml(myid)
 post_status="publish"
 comment_status="open"
 ping_status="open"
@@ -486,7 +486,7 @@ def Wpimprt_book.insertwp_term_taxonomy(myid,postid)
     sql5=sql5+" WHERE `term_taxonomy_id` ="
     sql5=sql5+"'"+catid.to_s+"'"
    self.dbprocess(sql5)
-   puts "update term_taxonomy, add 1 for products # under this category"
+   puts "update term_taxonomy, add 1 for products under this category"
 end #def Wpimprt_book.insertwp_term_taxonomy(myid,postid)
 
 
@@ -524,15 +524,26 @@ products_price=products_price * 2
 
 end #def def Wpimprt_book.insertwp_term_taxonomy(myid,postid)
 
+
+def Wpimprt_book.imageOK(myid)
+  imageLocalpath=Osc.getimgLclPth_book(myid)
+  if imageLocalpath.include?"dlerr:"
+    return false
+  end
+  
+  return true
+end
+
 def Wpimprt_book.insertMyID(myid)
   myid=myid.to_s
   postname=Osc.getproducts_name(myid)
 
-  
+  puts "\n\n====Processing MY ID #{myid}===="
 
 judge= self.hasPostname(postname).to_s == "0".to_s  
 #judge = judge and self.hasId(postid).to_s == "0".to_s
-judge = judge and self.hasmyID(myid).to_s == "0".to_s  
+judge = judge and self.hasmyID(myid).to_s == "0".to_s
+judge = judge and self.imageOK(myid)
 #puts judge
 if judge
   imgpostid=self.insertinsertwp_posts_image(myid)  

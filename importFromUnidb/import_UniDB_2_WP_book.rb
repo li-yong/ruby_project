@@ -52,7 +52,7 @@ if options[:startId].nil?
 	maxid=Wpimprt_book.dbshow("SELECT max( `myID` )FROM `myid_postid` WHERE 1 ")
 	maxid="0" if maxid.nil?
 else
-  	maxid=options[:startId]
+  	maxid=options[:startId] 
 end
 
  
